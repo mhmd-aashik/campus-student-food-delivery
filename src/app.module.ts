@@ -5,6 +5,9 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/validation';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
+import { AuthService } from './auth/auth.service';
+import { AuthController } from './auth/auth.controller';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,8 +17,9 @@ import { UsersModule } from './users/users.module';
     }),
     DatabaseModule,
     UsersModule,
+    AuthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AuthController],
+  providers: [AppService, AuthService],
 })
 export class AppModule {}
