@@ -1,4 +1,5 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 
 interface RequestWithUser extends Request {
@@ -11,7 +12,8 @@ interface RequestWithUser extends Request {
 
 @Controller('users')
 export class UsersController {
-  @Get()
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
   getMe(@Req() req: RequestWithUser) {
     return req.user;
   }
