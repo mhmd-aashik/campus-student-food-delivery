@@ -27,6 +27,12 @@ export class UsersService {
     return user;
   }
 
+  async findByIdRaw(id: string) {
+    return this.db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+    });
+  }
+
   async findByEmail(email: string) {
     return this.db.query.users.findFirst({
       where: eq(schema.users.email, email),

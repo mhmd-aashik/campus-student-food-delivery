@@ -9,6 +9,7 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -85,5 +86,38 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async refresh(refreshDto: RefreshDto) {
+    try {
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
+        refreshDto.refreshToken,
+        {
+          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        },
+      );
+      const user = await this.usersService.findByIdRaw(payload.sub);
+
+      if (!user || !user.refreshToken) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const isRefreshTokenMatching = await bcrypt.compare(
+        refreshDto.refreshToken,
+        user.refreshToken,
+      );
+
+      if (!isRefreshTokenMatching) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+      const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+      await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
+
+      return tokens;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }
