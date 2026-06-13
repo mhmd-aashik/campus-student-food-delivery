@@ -120,8 +120,9 @@ async function main() {
     ]);
 
     console.log('✅ Seeding completed successfully!');
-  } catch (error) {
-    console.error('❌ Seeding failed:', error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('❌ Seeding failed:', err.message);
   } finally {
     await pool.end();
   }
