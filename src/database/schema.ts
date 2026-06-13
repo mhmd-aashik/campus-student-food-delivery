@@ -1,4 +1,5 @@
 import { relations } from 'drizzle-orm';
+import { index } from 'drizzle-orm/pg-core';
 import {
   boolean,
   integer,
@@ -25,37 +26,45 @@ export const users = pgTable('users', {
 });
 
 // RESTAURANTS TABLE
-export const restaurants = pgTable('restaurants', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  ownerId: uuid('owner_id')
-    .references(() => users.id, {
-      onDelete: 'cascade',
-    })
-    .notNull(),
-  name: text('name').notNull(),
-  description: text('description'),
-  address: text('address').notNull(),
-  logoUrl: text('logo_url'),
-  phone: text('phone').notNull(),
-  isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const restaurants = pgTable(
+  'restaurants',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .references(() => users.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    address: text('address').notNull(),
+    logoUrl: text('logo_url'),
+    phone: text('phone').notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [index('restaurants_owner_id_idx').on(table.ownerId)],
+);
 
 // MENUS TABLE (Menu Items)
-export const menus = pgTable('menus', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  restaurantId: uuid('restaurant_id').references(() => restaurants.id, {
-    onDelete: 'cascade',
-  }),
-  name: text('name').notNull(),
-  description: text('description'),
-  price: integer('price').notNull(),
-  imageUrl: text('image_url'),
-  isAvailable: boolean('is_available').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const menus = pgTable(
+  'menus',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    restaurantId: uuid('restaurant_id').references(() => restaurants.id, {
+      onDelete: 'cascade',
+    }),
+    name: text('name').notNull(),
+    description: text('description'),
+    price: integer('price').notNull(),
+    imageUrl: text('image_url'),
+    isAvailable: boolean('is_available').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [index('menus_restaurant_id_idx').on(table.restaurantId)],
+);
 
 // RELATIONSHIPS
 // user -> restaurants (one to many)
