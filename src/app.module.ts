@@ -8,6 +8,9 @@ import { UsersModule } from './users/users.module';
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
+import { RestaurantController } from './restaurant/restaurant.controller';
+import { RestaurantService } from './restaurant/restaurant.service';
+import { RestaurantModule } from './restaurant/restaurant.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,8 +21,9 @@ import { AuthModule } from './auth/auth.module';
     DatabaseModule,
     UsersModule,
     AuthModule,
+    RestaurantModule,
   ],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService],
+  controllers: [AppController, AuthController, RestaurantController],
+  providers: [AppService, AuthService, RestaurantService],
 })
 export class AppModule {}
