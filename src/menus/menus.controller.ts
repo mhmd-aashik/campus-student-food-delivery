@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { Request } from 'express';
 import { Role } from '@/auth/enums/role.enum';
@@ -6,6 +14,7 @@ import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
+import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 
 interface RequestWithUser extends Request {
   user?: {
@@ -26,8 +35,11 @@ export class MenusController {
     return this.menusService.createMenuItem(req.user!.id, createDto);
   }
 
-  @Get()
-  test() {
-    return 'test';
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: RequestWithUser,
+    @Body() updateDto: UpdateMenuItemDto,
+  ) {
+    return this.menusService.updateMenuItem(id, req.user!.id, updateDto);
   }
 }
