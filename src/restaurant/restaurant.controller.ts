@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { Role } from '@/auth/enums/role.enum';
 import { Request } from 'express';
@@ -24,5 +24,10 @@ export class RestaurantController {
   @Roles(Role.RESTAURANT)
   create(@Req() req: RequestWithUser, @Body() createDto: CreateRestaurantDto) {
     return this.restaurantService.createRestaurant(req.user!.id, createDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.restaurantService.findAllRestaurants();
   }
 }

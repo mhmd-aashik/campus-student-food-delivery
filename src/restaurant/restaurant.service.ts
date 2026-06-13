@@ -33,4 +33,10 @@ export class RestaurantService {
 
     return restaurant;
   }
+
+  async findAllRestaurants() {
+    return this.db.query.restaurants.findMany({
+      where: eq(schema.restaurants.isActive, true),
+    });
+  }
 }
