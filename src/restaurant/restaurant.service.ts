@@ -92,4 +92,29 @@ export class RestaurantService {
 
     return updated;
   }
+
+  async deleteRestaurant(id: string, ownerId: string) {
+    const restaurant = await this.db.query.restaurants.findFirst({
+      where: eq(schema.restaurants.id, id),
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+
+    if (restaurant.ownerId !== ownerId) {
+      throw new ForbiddenException(
+        'You are not authorized to delete this restaurant',
+      );
+    }
+
+    await this.db
+      .delete(schema.restaurants)
+      .where(eq(schema.restaurants.id, id));
+
+    return {
+      id,
+      message: 'Restaurant deleted successfully',
+    };
+  }
 }

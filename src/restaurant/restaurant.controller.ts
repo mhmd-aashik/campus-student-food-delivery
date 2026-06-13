@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -56,5 +57,12 @@ export class RestaurantController {
     @Body() updateDto: UpdateRestaurantDto,
   ) {
     return this.restaurantService.updateRestaurant(id, req.user!.id, updateDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.RESTAURANT)
+  delete(@Param('id', ParseUUIDPipe) id: string, @Req() req: RequestWithUser) {
+    return this.restaurantService.deleteRestaurant(id, req.user!.id);
   }
 }
