@@ -94,4 +94,12 @@ export class MenusService {
 
     return { id, message: 'Menu item deleted successfully' };
   }
+
+  async findByRestaurantId(restaurantId: string) {
+    await this.restaurantService.findRestaurantById(restaurantId);
+
+    return this.db.query.menus.findMany({
+      where: eq(schema.menus.restaurantId, restaurantId),
+    });
+  }
 }

@@ -8,6 +8,8 @@ import {
   Req,
   UseGuards,
   Patch,
+  Query,
+  Get,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { Request } from 'express';
@@ -53,5 +55,12 @@ export class MenusController {
   @Roles(Role.RESTAURANT)
   remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: RequestWithUser) {
     return this.menusService.deleteMenuItem(id, req.user!.id);
+  }
+
+  @Get()
+  findByRestaurantId(
+    @Query('restaurantId', ParseUUIDPipe) restaurantId: string,
+  ) {
+    return this.menusService.findByRestaurantId(restaurantId);
   }
 }
