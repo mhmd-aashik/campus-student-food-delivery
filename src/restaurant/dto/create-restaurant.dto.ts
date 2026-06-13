@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateRestaurantDto {
   @IsString()
@@ -15,6 +15,9 @@ export class CreateRestaurantDto {
 
   @IsString()
   @IsOptional()
+  @Matches(/^https:\/\/(?:[a-zA-Z0-9-]+\.)*(?:utfs\.io|ufs\.sh)\/f\/.+$/, {
+    message: 'Logo URL must be a valid UploadThing file URL',
+  })
   logoUrl?: string;
 
   @IsString()
