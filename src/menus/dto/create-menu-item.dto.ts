@@ -5,6 +5,7 @@ import {
   IsInt,
   Min,
   IsUUID,
+  Matches,
 } from 'class-validator';
 
 export class CreateMenuItemDto {
@@ -26,5 +27,8 @@ export class CreateMenuItemDto {
 
   @IsString()
   @IsOptional()
+  @Matches(/^https:\/\/(?:[a-zA-Z0-9-]+\.)*(?:utfs\.io|ufs\.sh)\/f\/.+$/, {
+    message: 'Image URL must be a valid UploadThing file URL',
+  })
   imageUrl?: string;
 }
