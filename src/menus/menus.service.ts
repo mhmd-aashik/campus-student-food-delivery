@@ -70,4 +70,28 @@ export class MenusService {
 
     return updated;
   }
+
+  async deleteMenuItem(id: string, ownerId: string) {
+    const menuItem = await this.db.query.menus.findFirst({
+      where: eq(schema.menus.id, id),
+    });
+
+    if (!menuItem || !menuItem.restaurantId) {
+      throw new NotFoundException('Menu item not found');
+    }
+
+    const restaurant = await this.restaurantService.findRestaurantById(
+      menuItem.restaurantId,
+    );
+
+    if (restaurant.ownerId !== ownerId) {
+      throw new ForbiddenException(
+        "You are not authorized to manage this restaurant's menu",
+      );
+    }
+
+    await this.db.delete(schema.menus).where(eq(schema.menus.id, id));
+
+    return { id, message: 'Menu item deleted successfully' };
+  }
 }

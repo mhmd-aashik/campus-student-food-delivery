@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { Request } from 'express';
@@ -35,11 +37,21 @@ export class MenusController {
     return this.menusService.createMenuItem(req.user!.id, createDto);
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.RESTAURANT)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: RequestWithUser,
     @Body() updateDto: UpdateMenuItemDto,
   ) {
     return this.menusService.updateMenuItem(id, req.user!.id, updateDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.RESTAURANT)
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: RequestWithUser) {
+    return this.menusService.deleteMenuItem(id, req.user!.id);
   }
 }
