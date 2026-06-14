@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 
 @Injectable()
@@ -95,6 +95,41 @@ export class CartsService {
         })
         .returning();
       return newItem;
+    }
+  }
+
+  async removeItem(userId: string, menuId: string, quantity?: number) {
+    const cart = await this.getOrCreateCart(userId);
+
+    const [existingCartItem] = await this.db
+      .select()
+      .from(schema.cartItems)
+      .where(
+        and(
+          eq(schema.cartItems.cartId, cart.id),
+          eq(schema.cartItems.menuId, menuId),
+        ),
+      );
+
+    if (!existingCartItem) {
+      throw new NotFoundException('Item not found in cart');
+    }
+
+    if (quantity && quantity < existingCartItem.quantity) {
+      const [updatedItem] = await this.db
+        .update(schema.cartItems)
+        .set({
+          quantity: existingCartItem.quantity - quantity,
+          updateAt: new Date(),
+        })
+        .where(eq(schema.cartItems.id, existingCartItem.id))
+        .returning();
+      return updatedItem;
+    } else {
+      await this.db
+        .delete(schema.cartItems)
+        .where(eq(schema.cartItems.id, existingCartItem.id));
+      return { message: 'Item removed from cart' };
     }
   }
 }
