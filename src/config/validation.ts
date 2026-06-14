@@ -9,6 +9,8 @@ const envSchema = z.object({
     .string()
     .min(8, 'JWT_REFRESH_SECRET must be at least 8 characters'),
   UPLOADTHING_SECRET: z.string().optional(),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export const validate = (config: Record<string, unknown>) => {

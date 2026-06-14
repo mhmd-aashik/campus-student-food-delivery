@@ -18,6 +18,7 @@ import { CartsModule } from './carts/carts.module';
 import { OrdersService } from './orders/orders.service';
 import { OrdersController } from './orders/orders.controller';
 import { OrdersModule } from './orders/orders.module';
+import { PaymentsService } from './payments/payments.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +42,12 @@ import { OrdersModule } from './orders/orders.module';
     UploadthingController,
     OrdersController,
   ],
-  providers: [AppService, AuthService, RestaurantService, OrdersService],
+  providers: [
+    AppService,
+    AuthService,
+    RestaurantService,
+    OrdersService,
+    PaymentsService,
+  ],
 })
 export class AppModule {}
