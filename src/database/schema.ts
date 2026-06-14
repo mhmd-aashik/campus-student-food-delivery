@@ -53,9 +53,11 @@ export const menus = pgTable(
   'menus',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    restaurantId: uuid('restaurant_id').references(() => restaurants.id, {
-      onDelete: 'cascade',
-    }),
+    restaurantId: uuid('restaurant_id')
+      .references(() => restaurants.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
     name: text('name').notNull(),
     description: text('description'),
     price: integer('price').notNull(),

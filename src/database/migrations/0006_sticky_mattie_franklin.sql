@@ -1,0 +1,1 @@
+ALTER TABLE "menus" ALTER COLUMN "restaurant_id" SET NOT NULL;
