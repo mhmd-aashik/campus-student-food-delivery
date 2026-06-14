@@ -50,6 +50,13 @@
       "when": 1781470166602,
       "tag": "0006_sticky_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781473250719,
+      "tag": "0007_slim_bedlam",
+      "breakpoints": true
     }
   ]
 }

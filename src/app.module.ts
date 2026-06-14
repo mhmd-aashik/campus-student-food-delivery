@@ -12,6 +12,7 @@ import { UploadthingModule } from './uploadthing/uploadthing.module';
 import { CartsModule } from './carts/carts.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { DriverModule } from './driver/driver.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,6 +29,7 @@ import { PaymentsModule } from './payments/payments.module';
     CartsModule,
     OrdersModule,
     PaymentsModule,
+    DriverModule,
   ],
   controllers: [AppController],
   providers: [AppService],
