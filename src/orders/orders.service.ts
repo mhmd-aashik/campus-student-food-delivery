@@ -10,7 +10,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
 import { CartsService } from '@/carts/carts.service';
 import { CheckoutDto } from './dto/checkout.dto';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 @Injectable()
 export class OrdersService {
@@ -111,5 +111,13 @@ export class OrdersService {
       ...order,
       items,
     };
+  }
+
+  async getOrderHistory(userId: string) {
+    return this.db
+      .select()
+      .from(schema.orders)
+      .where(eq(schema.users.id, userId))
+      .orderBy(desc(schema.orders.createdAt));
   }
 }
