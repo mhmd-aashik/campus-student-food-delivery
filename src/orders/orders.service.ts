@@ -120,4 +120,14 @@ export class OrdersService {
       .where(eq(schema.users.id, userId))
       .orderBy(desc(schema.orders.createdAt));
   }
+
+  async updatePaymentIntentId(orderId: string, paymentIntentId: string) {
+    await this.db
+      .update(schema.orders)
+      .set({
+        stripePaymentIntentId: paymentIntentId,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.orders.id, orderId));
+  }
 }

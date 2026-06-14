@@ -16,7 +16,10 @@ export class PaymentsService {
     this.stripe = new Stripe(secretKey);
   }
 
-  async createPaymentIntent(orderId: string, amount: number) {
+  async createPaymentIntent(
+    orderId: string,
+    amount: number,
+  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
         amount,
@@ -27,7 +30,7 @@ export class PaymentsService {
       });
 
       return {
-        clientSecret: paymentIntent.client_secret,
+        clientSecret: paymentIntent.client_secret || '',
         paymentIntentId: paymentIntent.id,
       };
     } catch (error) {
