@@ -1,8 +1,10 @@
 import { Role } from '@/auth/enums/role.enum';
 import { OrdersService } from '@/orders/orders.service';
 import {
+  BadRequestException,
   ConflictException,
   Controller,
+  Headers,
   Param,
   ParseUUIDPipe,
   Post,
@@ -57,5 +59,24 @@ export class PaymentsController {
     await this.ordersService.updatePaymentIntentId(order.id, paymentIntentId);
 
     return { clientSecret };
+  }
+
+  @Post('webhook')
+  handleWebhook(
+    @Req() req: Request & { rawBody?: Buffer },
+    @Headers('stripe-signature') signature?: string,
+  ) {
+    if (!signature) {
+      throw new BadRequestException('Missing stripe-signature header');
+    }
+
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+      throw new BadRequestException('Missing raw body');
+    }
+
+    this.paymentsService.verifyWebhookSignature(rawBody, signature);
+
+    return { received: true };
   }
 }
