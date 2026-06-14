@@ -132,4 +132,35 @@ export class CartsService {
       return { message: 'Item removed from cart' };
     }
   }
+
+  async getCart(userId: string) {
+    const cart = await this.getOrCreateCart(userId);
+
+    const items = await this.db
+      .select({
+        id: schema.cartItems.id,
+        cartId: schema.cartItems.cartId,
+        menuId: schema.cartItems.menuId,
+        quantity: schema.cartItems.quantity,
+        createdAt: schema.cartItems.createdAt,
+        updatedAt: schema.cartItems.updateAt,
+        menu: {
+          id: schema.menus.id,
+          restaurantId: schema.menus.restaurantId,
+          name: schema.menus.name,
+          description: schema.menus.description,
+          price: schema.menus.price,
+          imageUrl: schema.menus.imageUrl,
+          isAvailable: schema.menus.isAvailable,
+        },
+      })
+      .from(schema.cartItems)
+      .innerJoin(schema.menus, eq(schema.cartItems.menuId, schema.menus.id))
+      .where(eq(schema.cartItems.cartId, cart.id));
+
+    return {
+      ...cart,
+      items,
+    };
+  }
 }

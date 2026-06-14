@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseUUIDPipe,
   Post,
@@ -45,5 +46,12 @@ export class CartsController {
   ) {
     const quantity = quantityStr ? parseInt(quantityStr, 10) : undefined;
     return this.cartsService.removeItem(req.user!.id, menuId, quantity);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER)
+  getCart(@Req() req: RequestWithUser) {
+    return this.cartsService.getCart(req.user!.id);
   }
 }
