@@ -46,14 +46,32 @@ export class OrderTransitionService {
       );
     }
 
-    const [updatedOrder] = await this.db
-      .update(schema.orders)
-      .set({
-        status: targetStatus,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.orders.id, orderId))
-      .returning();
+    const updatedOrder = await this.db.transaction(async (tx) => {
+      const [updatedOrderWithDriverId] = await tx
+        .update(schema.orders)
+        .set({
+          status: targetStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.orders.id, orderId))
+        .returning();
+
+      if (
+        updatedOrderWithDriverId.driverId &&
+        (targetStatus === OrderStatus.DELIVERED ||
+          targetStatus === OrderStatus.CANCELLED)
+      ) {
+        await tx
+          .update(schema.users)
+          .set({
+            isAvailable: true,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.users.id, updatedOrderWithDriverId.driverId));
+      }
+
+      return updatedOrderWithDriverId;
+    });
 
     return updatedOrder;
   }

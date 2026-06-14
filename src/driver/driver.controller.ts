@@ -1,4 +1,13 @@
-import { Body, Controller, Patch, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
@@ -26,5 +35,25 @@ export class DriverController {
     @Body() dto: UpdateAvailabilityDto,
   ) {
     return this.driverService.updateAvailability(req.user!.id, dto.isAvailable);
+  }
+
+  @Post('orders/:orderId/accept')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DRIVER)
+  async acceptDelivery(
+    @Req() req: RequestWithUser,
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+  ) {
+    return this.driverService.acceptDelivery(req.user!.id, orderId);
+  }
+
+  @Post('orders/:orderId/decline')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DRIVER)
+  async declineDelivery(
+    @Req() req: RequestWithUser,
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+  ) {
+    return this.driverService.declineDelivery(req.user!.id, orderId);
   }
 }
