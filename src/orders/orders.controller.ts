@@ -1,5 +1,14 @@
 import { Role } from '@/auth/enums/role.enum';
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { OrdersService } from './orders.service';
 import { Roles } from '@/auth/decorators/roles.decorator';
@@ -31,5 +40,12 @@ export class OrdersController {
   @Roles(Role.CUSTOMER, Role.RESTAURANT, Role.DRIVER)
   getOrderHistory(@Req() req: RequestWithUser) {
     return this.ordersService.getOrderHistory(req.user!.id);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER, Role.RESTAURANT, Role.DRIVER)
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: RequestWithUser) {
+    return this.ordersService.getOrderDetails(id, req.user!.id);
   }
 }
