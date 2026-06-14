@@ -1,5 +1,4 @@
 import { relations } from 'drizzle-orm';
-import { index } from 'drizzle-orm/pg-core';
 import {
   boolean,
   integer,
@@ -7,7 +6,9 @@ import {
   pgTable,
   text,
   timestamp,
+  index,
   uuid,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 // user roles enum
@@ -66,10 +67,55 @@ export const menus = pgTable(
   (table) => [index('menus_restaurant_id_idx').on(table.restaurantId)],
 );
 
+// CARTS TABLE
+export const carts = pgTable(
+  'cart_item',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .unique()
+      .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updateAt: timestamp('update_at').defaultNow().notNull(),
+  },
+  (table) => [index('carts_user_id_idx').on(table.userId)],
+);
+
+// CARTS ITEMS TABLE
+export const cartItems = pgTable(
+  'cart_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    cartId: uuid('cart_id')
+      .references(() => carts.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    menuId: uuid('menu_id')
+      .references(() => menus.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    quantity: integer('quantity').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updateAt: timestamp('update_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    cartIdIdx: index('cart_items_cart_id_idx').on(table.cartId),
+    menuIdIdx: index('cart_items_menu_id_idx').on(table.menuId),
+    cartMenuUniqueIdx: uniqueIndex('cart_items_cart_id_menu_id_unique_idx').on(
+      table.cartId,
+      table.menuId,
+    ),
+  }),
+);
+
 // RELATIONSHIPS
 // user -> restaurants (one to many)
-export const userRelations = relations(users, ({ many }) => ({
+export const userRelations = relations(users, ({ one, many }) => ({
   restaurants: many(restaurants),
+  cart: one(carts),
 }));
 
 // restaurant -> owner (one to one)
@@ -82,9 +128,29 @@ export const restaurantRelations = relations(restaurants, ({ one, many }) => ({
 }));
 
 // menu -> restaurant (one to one)
-export const menusRelations = relations(menus, ({ one }) => ({
+export const menusRelations = relations(menus, ({ one, many }) => ({
   restaurant: one(restaurants, {
     fields: [menus.restaurantId],
     references: [restaurants.id],
+  }),
+  cartsItems: many(cartItems),
+}));
+
+export const cartsRelations = relations(carts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [carts.userId],
+    references: [users.id],
+  }),
+  items: many(cartItems),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  cart: one(carts, {
+    fields: [cartItems.cartId],
+    references: [carts.id],
+  }),
+  menu: one(menus, {
+    fields: [cartItems.menuId],
+    references: [menus.id],
   }),
 }));
