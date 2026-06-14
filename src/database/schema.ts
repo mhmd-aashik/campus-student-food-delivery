@@ -101,14 +101,14 @@ export const cartItems = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updateAt: timestamp('update_at').defaultNow().notNull(),
   },
-  (table) => ({
-    cartIdIdx: index('cart_items_cart_id_idx').on(table.cartId),
-    menuIdIdx: index('cart_items_menu_id_idx').on(table.menuId),
-    cartMenuUniqueIdx: uniqueIndex('cart_items_cart_id_menu_id_unique_idx').on(
+  (table) => [
+    index('cart_items_cart_id_idx').on(table.cartId),
+    index('cart_items_menu_id_idx').on(table.menuId),
+    uniqueIndex('cart_items_cart_id_menu_id_unique_idx').on(
       table.cartId,
       table.menuId,
     ),
-  }),
+  ],
 );
 
 // RELATIONSHIPS
@@ -151,6 +151,116 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
   }),
   menu: one(menus, {
     fields: [cartItems.menuId],
+    references: [menus.id],
+  }),
+}));
+
+// ENUMS FOR ORDERS
+export const orderStatusEnum = pgEnum('order_status', [
+  'PENDING',
+  'CONFIRMED',
+  'PREPARING',
+  'READY',
+  'PICKED_UP',
+  'DELIVERED',
+  'CANCELLED',
+]);
+
+export const paymentStatusEnum = pgEnum('payment_status', [
+  'PENDING',
+  'PAID',
+  'FAILED',
+]);
+
+// ORDERS TABLE
+export const orders = pgTable(
+  'orders',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    restaurantId: uuid('restaurant_id')
+      .references(() => restaurants.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+
+    status: orderStatusEnum('status').default('PENDING').notNull(),
+    totalAmount: integer('total_amount').notNull(),
+    deliveryAddress: text('delivery_address').notNull(),
+    deliveryPhone: text('delivery_phone').notNull(),
+    paymentStatus: paymentStatusEnum('payment_status')
+      .default('PENDING')
+      .notNull(),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    driverId: uuid('driver_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('orders_user_id_idx').on(table.userId),
+    index('orders_restaurant_id_idx').on(table.restaurantId),
+    index('orders_driver_id_idx').on(table.driverId),
+  ],
+);
+
+// ORDER ITEMS TABLE
+export const orderItems = pgTable(
+  'order_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orderId: uuid('order_id')
+      .references(() => orders.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    menuId: uuid('menu_id')
+      .references(() => menus.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+    quantity: integer('quantity').notNull(),
+    priceAtOrder: integer('price_at_order').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('order_items_order_id_idx').on(table.orderId),
+    index('order_items_menu_id_idx').on(table.menuId),
+  ],
+);
+
+// ORDERS RELATIONSHIPS
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+    relationName: 'customerOrders',
+  }),
+  driver: one(users, {
+    fields: [orders.driverId],
+    references: [users.id],
+    relationName: 'driverDeliveries',
+  }),
+  restaurant: one(restaurants, {
+    fields: [orders.restaurantId],
+    references: [restaurants.id],
+  }),
+  items: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  menu: one(menus, {
+    fields: [orderItems.menuId],
     references: [menus.id],
   }),
 }));
