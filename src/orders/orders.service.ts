@@ -130,4 +130,16 @@ export class OrdersService {
       })
       .where(eq(schema.orders.id, orderId));
   }
+
+  async confirmPayment(orderId: string, stripePaymentIntentId: string) {
+    await this.db
+      .update(schema.orders)
+      .set({
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        stripePaymentIntentId,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.orders.id, orderId));
+  }
 }

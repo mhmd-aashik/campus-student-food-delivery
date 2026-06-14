@@ -62,7 +62,7 @@ export class PaymentsController {
   }
 
   @Post('webhook')
-  handleWebhook(
+  async handleWebhook(
     @Req() req: Request & { rawBody?: Buffer },
     @Headers('stripe-signature') signature?: string,
   ) {
@@ -75,7 +75,20 @@ export class PaymentsController {
       throw new BadRequestException('Missing raw body');
     }
 
-    this.paymentsService.verifyWebhookSignature(rawBody, signature);
+    const event = this.paymentsService.verifyWebhookSignature(
+      rawBody,
+      signature,
+    );
+
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      const orderId = paymentIntent.metadata?.orderId;
+      const paymentIntentId = paymentIntent.id;
+
+      if (orderId && paymentIntentId) {
+        await this.ordersService.confirmPayment(orderId, paymentIntentId);
+      }
+    }
 
     return { received: true };
   }
