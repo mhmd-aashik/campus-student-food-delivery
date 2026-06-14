@@ -14,6 +14,7 @@ import { RestaurantModule } from './restaurant/restaurant.module';
 import { MenusModule } from './menus/menus.module';
 import { UploadthingController } from './uploadthing/uploadthing.controller';
 import { UploadthingModule } from './uploadthing/uploadthing.module';
+import { CartsModule } from './carts/carts.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,8 +28,14 @@ import { UploadthingModule } from './uploadthing/uploadthing.module';
     RestaurantModule,
     MenusModule,
     UploadthingModule,
+    CartsModule,
   ],
-  controllers: [AppController, AuthController, RestaurantController, UploadthingController],
+  controllers: [
+    AppController,
+    AuthController,
+    RestaurantController,
+    UploadthingController,
+  ],
   providers: [AppService, AuthService, RestaurantService],
 })
 export class AppModule {}
