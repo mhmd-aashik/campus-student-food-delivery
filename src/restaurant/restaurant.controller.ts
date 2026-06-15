@@ -27,7 +27,7 @@ interface RequestWithUser extends Request {
   };
 }
 
-@Controller('restaurant')
+@Controller('restaurants')
 export class RestaurantController {
   constructor(protected readonly restaurantService: RestaurantService) {}
 
