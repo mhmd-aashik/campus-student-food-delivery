@@ -1,4 +1,13 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { Role } from '@/auth/enums/role.enum';
 import { Roles } from '@/auth/decorators/roles.decorator';
@@ -26,5 +35,19 @@ export class ReviewsController {
     @Body() dto: CreateReviewDto,
   ) {
     return this.reviewsService.createReview(req.user!.id, dto);
+  }
+
+  @Get('restaurant/:restaurantId/rating')
+  async getRestaurantRating(
+    @Param('restaurantId', ParseUUIDPipe) restaurantId: string,
+  ) {
+    return this.reviewsService.getRestaurantRating(restaurantId);
+  }
+
+  @Get('restaurant/:restaurantId')
+  async getRestaurantReviews(
+    @Param('restaurantId', ParseUUIDPipe) restaurantId: string,
+  ) {
+    return this.reviewsService.getRestaurantReviews(restaurantId);
   }
 }

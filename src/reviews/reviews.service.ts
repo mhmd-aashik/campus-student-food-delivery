@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { CreateReviewDto } from './dto/create-review.dto';
 
 @Injectable()
@@ -61,5 +61,34 @@ export class ReviewsService {
       .returning();
 
     return review;
+  }
+
+  async getRestaurantRating(restaurantId: string) {
+    const [result] = await this.db
+      .select({
+        averageRating: sql<number>`COALESCE(avg(${schema.reviews.rating}), 0)::float`,
+        reviewCount: sql<number>`count(${schema.reviews.id})::int`,
+      })
+      .from(schema.reviews)
+      .where(eq(schema.reviews.restaurantId, restaurantId));
+
+    return result || { averageRating: 0, reviewCount: 0 };
+  }
+
+  async getRestaurantReviews(restaurantId: string) {
+    return this.db
+      .select({
+        id: schema.reviews.id,
+        rating: schema.reviews.rating,
+        comment: schema.reviews.comment,
+        createdAt: schema.reviews.createdAt,
+        user: {
+          id: schema.users.id,
+          name: schema.users.name,
+        },
+      })
+      .from(schema.reviews)
+      .innerJoin(schema.users, eq(schema.reviews.userId, schema.users.id))
+      .where(eq(schema.reviews.restaurantId, restaurantId));
   }
 }
