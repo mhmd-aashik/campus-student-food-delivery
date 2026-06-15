@@ -15,6 +15,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { DriverModule } from './driver/driver.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,6 +35,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     DriverModule,
     WebsocketModule,
     ReviewsModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
