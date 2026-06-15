@@ -9,7 +9,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
+import { DRIZZLE } from '@/constants/database.constants';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import * as schema from '@/database/schema';
+import { eq } from 'drizzle-orm';
 
 @WebSocketGateway({
   cors: {
@@ -24,7 +28,11 @@ export class WebsocketGateway
 
   private readonly logger = new Logger(WebsocketGateway.name);
 
-  constructor(protected readonly jwtService: JwtService) {}
+  constructor(
+    protected readonly jwtService: JwtService,
+    @Inject(DRIZZLE)
+    protected readonly db: NodePgDatabase<typeof schema>,
+  ) {}
 
   async handleConnection(client: Socket) {
     try {
@@ -50,6 +58,19 @@ export class WebsocketGateway
         await client.join('drivers');
       } else if (payload.role === 'RESTAURANT') {
         await client.join('restaurants');
+      }
+
+      // find restaurant owned by user
+      const [restaurant] = await this.db
+        .select()
+        .from(schema.restaurants)
+        .where(eq(schema.restaurants.ownerId, payload.sub));
+
+      if (restaurant) {
+        await client.join(`restaurant:${restaurant.id}`);
+        this.logger.log(
+          `Restaurant client auto-joined room restaurant:${restaurant.id}`,
+        );
       }
 
       this.logger.log(

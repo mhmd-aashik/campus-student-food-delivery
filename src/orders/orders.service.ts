@@ -11,6 +11,7 @@ import * as schema from '@/database/schema';
 import { CartsService } from '@/carts/carts.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { desc, eq } from 'drizzle-orm';
+import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 @Injectable()
 export class OrdersService {
@@ -18,6 +19,7 @@ export class OrdersService {
     @Inject(DRIZZLE)
     protected readonly db: NodePgDatabase<typeof schema>,
     protected readonly cartsService: CartsService,
+    protected readonly websocketGateway: WebsocketGateway,
   ) {}
 
   async checkout(userId: string, checkoutDto: CheckoutDto) {
@@ -122,13 +124,33 @@ export class OrdersService {
   }
 
   async updatePaymentIntentId(orderId: string, paymentIntentId: string) {
-    await this.db
+    const [updatedOrder] = await this.db
       .update(schema.orders)
       .set({
         stripePaymentIntentId: paymentIntentId,
         updatedAt: new Date(),
       })
-      .where(eq(schema.orders.id, orderId));
+      .where(eq(schema.orders.id, orderId))
+      .returning();
+
+    if (updatedOrder) {
+      // Broadcast status update to the customer
+      this.websocketGateway.emitToRoom(
+        `user:${updatedOrder.userId}`,
+        'order_status_updated',
+        {
+          orderId: updatedOrder.id,
+          status: updatedOrder.status,
+        },
+      );
+
+      // Notify the restaurant about the new confirmed order
+      this.websocketGateway.emitToRoom(
+        `restaurant:${updatedOrder.restaurantId}`,
+        'new_order',
+        updatedOrder,
+      );
+    }
   }
 
   async confirmPayment(orderId: string, stripePaymentIntentId: string) {
