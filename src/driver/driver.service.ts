@@ -7,13 +7,15 @@ import {
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
+import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 @Injectable()
 export class DriverService {
   constructor(
     @Inject(DRIZZLE)
     protected readonly db: NodePgDatabase<typeof schema>,
+    protected readonly websocketGateway: WebsocketGateway,
   ) {}
 
   async updateAvailability(driverId: string, isAvailable: boolean) {
@@ -105,6 +107,37 @@ export class DriverService {
         },
       })
       .returning();
+
+    // Find all active orders assigned to this driver
+    const activeOrders = await this.db
+      .select()
+      .from(schema.orders)
+      .where(
+        and(
+          eq(schema.orders.driverId, driverId),
+          inArray(schema.orders.status, [
+            'CONFIRMED',
+            'PREPARING',
+            'READY',
+            'PICKED_UP',
+          ]),
+        ),
+      );
+
+    // Broadcast live location to each customer room
+    for (const order of activeOrders) {
+      this.websocketGateway.emitToRoom(
+        `user:${order.userId}`,
+        'driver_location_updated',
+        {
+          orderId: order.id,
+          driverId,
+          latitude,
+          longitude,
+          updatedAt: location.updatedAt,
+        },
+      );
+    }
 
     return location;
   }
