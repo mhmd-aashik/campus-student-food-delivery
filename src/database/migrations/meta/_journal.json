@@ -64,6 +64,13 @@
       "when": 1781527678792,
       "tag": "0008_strong_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781537071456,
+      "tag": "0009_complex_hitman",
+      "breakpoints": true
     }
   ]
 }

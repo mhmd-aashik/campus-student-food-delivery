@@ -290,3 +290,30 @@ export const driverLocationsRelations = relations(
     }),
   }),
 );
+
+// REVIEWS TABLE
+export const reviews = pgTable(
+  'reviews',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    restaurantId: uuid('restaurant_id')
+      .references(() => restaurants.id, { onDelete: 'cascade' })
+      .notNull(),
+    orderId: uuid('order_id')
+      .references(() => orders.id, { onDelete: 'cascade' })
+      .notNull()
+      .unique(),
+    rating: integer('rating').notNull(),
+    comment: text('comment'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('reviews_user_id_idx').on(table.userId),
+    index('reviews_restaurant_id_idx').on(table.restaurantId),
+    index('reviews_order_id_idx').on(table.orderId),
+  ],
+);
