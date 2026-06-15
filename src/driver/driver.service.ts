@@ -86,4 +86,26 @@ export class DriverService {
 
     return { declined: true };
   }
+
+  async updateLocation(driverId: string, latitude: number, longitude: number) {
+    const [location] = await this.db
+      .insert(schema.driverLocations)
+      .values({
+        driverId,
+        latitude,
+        longitude,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: schema.driverLocations.driverId,
+        set: {
+          latitude,
+          longitude,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return location;
+  }
 }

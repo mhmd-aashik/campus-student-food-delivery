@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  doublePrecision,
   index,
   uuid,
   uniqueIndex,
@@ -267,3 +268,25 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     references: [menus.id],
   }),
 }));
+
+// DRIVER LOCATIONS TABLE
+export const driverLocations = pgTable('driver_locations', {
+  driverId: uuid('driver_id')
+    .primaryKey()
+    .references(() => users.id, {
+      onDelete: 'cascade',
+    }),
+  latitude: doublePrecision('latitude').notNull(),
+  longitude: doublePrecision('longitude').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const driverLocationsRelations = relations(
+  driverLocations,
+  ({ one }) => ({
+    driver: one(users, {
+      fields: [driverLocations.driverId],
+      references: [users.id],
+    }),
+  }),
+);

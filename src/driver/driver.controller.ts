@@ -14,6 +14,7 @@ import { RolesGuard } from '@/auth/guards/roles.guard';
 import { Role } from '@/auth/enums/role.enum';
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 
 interface RequestWithUser extends Request {
   user?: {
@@ -55,5 +56,19 @@ export class DriverController {
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ) {
     return this.driverService.declineDelivery(req.user!.id, orderId);
+  }
+
+  @Post('location')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DRIVER)
+  async updateLocation(
+    @Req() req: RequestWithUser,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    return this.driverService.updateLocation(
+      req.user!.id,
+      dto.latitude,
+      dto.longitude,
+    );
   }
 }
