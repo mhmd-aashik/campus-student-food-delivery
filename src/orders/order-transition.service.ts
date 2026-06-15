@@ -9,6 +9,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
 import { OrderStatus } from './enums/order-status.enum';
 import { DRIZZLE } from '@/constants/database.constants';
+import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 @Injectable()
 export class OrderTransitionService {
@@ -25,6 +26,7 @@ export class OrderTransitionService {
   constructor(
     @Inject(DRIZZLE)
     protected readonly db: NodePgDatabase<typeof schema>,
+    protected readonly websocketGateway: WebsocketGateway,
   ) {}
 
   async transitionTo(orderId: string, targetStatus: OrderStatus) {
@@ -72,6 +74,16 @@ export class OrderTransitionService {
 
       return updatedOrderWithDriverId;
     });
+
+    // Broadcast update to the customer
+    this.websocketGateway.emitToRoom(
+      `user: ${updatedOrder.userId}`,
+      'order_status_updated',
+      {
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+      },
+    );
 
     return updatedOrder;
   }

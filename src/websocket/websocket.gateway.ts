@@ -67,4 +67,8 @@ export class WebsocketGateway
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
+
+  emitToRoom(room: string, event: string, data: any) {
+    this.server.to(room).emit(event, data);
+  }
 }
