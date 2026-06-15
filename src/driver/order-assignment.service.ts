@@ -8,12 +8,14 @@ import { eq, and } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@/database/schema';
 import { DRIZZLE } from '@/constants/database.constants';
+import { WebsocketGateway } from '@/websocket/websocket.gateway';
 
 @Injectable()
 export class OrderAssignmentService {
   constructor(
     @Inject(DRIZZLE)
     protected readonly db: NodePgDatabase<typeof schema>,
+    protected readonly websocketGateway: WebsocketGateway,
   ) {}
 
   async assignOrderToDriver(orderId: string) {
@@ -70,6 +72,13 @@ export class OrderAssignmentService {
 
       return updatedOrderWithDriverId;
     });
+
+    // Notify the assigned driver about the new delivery assignment
+    this.websocketGateway.emitToRoom(
+      `user:${availableDriver.id}`,
+      'order_assigned',
+      updatedOrder,
+    );
 
     return updatedOrder;
   }
