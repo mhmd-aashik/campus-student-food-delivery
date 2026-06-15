@@ -164,4 +164,30 @@ export class OrdersService {
       })
       .where(eq(schema.orders.id, orderId));
   }
+
+  async getOrderTracking(orderId: string, userId: string) {
+    const order = await this.getOrderDetails(orderId, userId);
+
+    if (!order.driverId) {
+      throw new NotFoundException('No driver assigned to this order yet');
+    }
+
+    const [location] = await this.db
+      .select()
+      .from(schema.driverLocations)
+      .where(eq(schema.driverLocations.driverId, order.driverId));
+
+    if (!location) {
+      throw new NotFoundException('Driver location not available yet');
+    }
+
+    return {
+      orderId: order.id,
+      status: order.status,
+      driverId: order.driverId,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      updatedAt: location.updatedAt,
+    };
+  }
 }

@@ -48,4 +48,14 @@ export class OrdersController {
   findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: RequestWithUser) {
     return this.ordersService.getOrderDetails(id, req.user!.id);
   }
+
+  @Get(':id/tracking')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER)
+  async getOrderTracking(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.ordersService.getOrderTracking(id, req.user!.id);
+  }
 }
