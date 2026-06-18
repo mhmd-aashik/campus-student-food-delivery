@@ -1,0 +1,1329 @@
+{
+  "info": {
+    "name": "Campus Food Delivery API",
+    "description": "Combined Postman collection for Customer, Vendor/Restaurant, and Driver roles.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Customer / User",
+      "item": [
+        {
+          "name": "A. Authentication",
+          "item": [
+            {
+              "name": "1. Register Customer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"customer@campus.edu\",\n  \"password\": \"password123\",\n  \"name\": \"Alex Student\",\n  \"role\": \"CUSTOMER\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Log In Customer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"customer_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"customer_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"customer@campus.edu\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Refresh JWT Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"customer_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"customer_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{customer_refresh_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Secure Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "B. Restaurant & Menu (Cached)",
+          "item": [
+            {
+              "name": "1. View All Active Restaurants",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response && response.length > 0) {",
+                      "    pm.environment.set(\"restaurant_id\", response[0].id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/restaurants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "restaurants"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. View Menu Items for a Restaurant",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response && response.length > 0) {",
+                      "    pm.environment.set(\"menu_item_id\", response[0].id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/menus?restaurantId={{restaurant_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ],
+                  "query": [
+                    {
+                      "key": "restaurantId",
+                      "value": "{{restaurant_id}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "C. Shopping Cart",
+          "item": [
+            {
+              "name": "1. Add/Update Item in Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"menuId\": \"{{menu_item_id}}\",\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/carts/items",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "carts",
+                    "items"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. View Active Cart",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/carts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "carts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Remove Item from Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/carts/items/{{menu_item_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "carts",
+                    "items",
+                    "{{menu_item_id}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "D. Order Placement & Payments",
+          "item": [
+            {
+              "name": "1. Checkout Cart",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.id) {",
+                      "    pm.environment.set(\"order_id\", response.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"deliveryAddress\": \"123 Dorm Room Hall, Campus East\",\n  \"deliveryPhone\": \"+15551234567\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/checkout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Generate Stripe Payment Intent",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.clientSecret) {",
+                      "    pm.environment.set(\"stripe_client_secret\", response.clientSecret);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/payments/intent/{{order_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "intent",
+                    "{{order_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Get Order Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Get Customer Order History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/history",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "history"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "E. GPS Live Tracking",
+          "item": [
+            {
+              "name": "1. Fetch Driver GPS Tracking Info",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}/tracking",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "tracking"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "F. Reviews & Ratings",
+          "item": [
+            {
+              "name": "1. Submit Restaurant Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Amazing burger! Delivered hot and fresh.\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reviews",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reviews"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. View Reviews for Restaurant",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/restaurant/{{restaurant_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reviews",
+                    "restaurant",
+                    "{{restaurant_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. View Average Ratings Summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/restaurant/{{restaurant_id}}/summary",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reviews",
+                    "restaurant",
+                    "{{restaurant_id}}",
+                    "summary"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Vendor / Restaurant",
+      "item": [
+        {
+          "name": "A. Authentication",
+          "item": [
+            {
+              "name": "1. Register Restaurant Owner",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"owner@campus.edu\",\n  \"password\": \"password123\",\n  \"name\": \"Jane Owner\",\n  \"role\": \"RESTAURANT\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Log In Restaurant Owner",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"restaurant_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"restaurant_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"owner@campus.edu\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Refresh JWT Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"restaurant_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"restaurant_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{restaurant_refresh_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Secure Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "B. Restaurant & Menu Catalog",
+          "item": [
+            {
+              "name": "1. Create Restaurant Profile",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.id) {",
+                      "    pm.environment.set(\"restaurant_id\", response.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Campus Bistro\",\n  \"description\": \"Gourmet burgers, wraps, and healthy salads\",\n  \"address\": \"Campus Center, 2nd Floor\",\n  \"phone\": \"555-0199\",\n  \"logoUrl\": \"https://utfs.io/f/bistro-logo.png\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/restaurants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "restaurants"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Add Menu Item",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.id) {",
+                      "    pm.environment.set(\"menu_item_id\", response.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"restaurantId\": \"{{restaurant_id}}\",\n  \"name\": \"Gourmet Cheeseburger\",\n  \"description\": \"Angus beef patty with cheddar cheese, lettuce, and special sauce\",\n  \"price\": 899,\n  \"imageUrl\": \"https://utfs.io/f/burger.png\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/menus",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "C. Order Operations",
+          "item": [
+            {
+              "name": "1. Update Order Status (PREPARING)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"PREPARING\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Update Order Status (READY)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"READY\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Get Restaurant Order History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/history",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "history"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Get Order Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{restaurant_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "D. Webhook Simulation",
+          "item": [
+            {
+              "name": "1. Simulate Stripe Webhook Success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"evt_test_webhook\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_mock_intent\",\n      \"metadata\": {\n        \"orderId\": \"{{order_id}}\"\n      }\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/payments/webhook",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "payments",
+                    "webhook"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Driver",
+      "item": [
+        {
+          "name": "A. Authentication",
+          "item": [
+            {
+              "name": "1. Register Driver",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"driver@campus.edu\",\n  \"password\": \"password123\",\n  \"name\": \"Bob Rider\",\n  \"role\": \"DRIVER\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Log In Driver",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"driver_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"driver_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"driver@campus.edu\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Refresh JWT Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.accessToken) {",
+                      "    pm.environment.set(\"driver_jwt_token\", response.accessToken);",
+                      "}",
+                      "if (response.refreshToken) {",
+                      "    pm.environment.set(\"driver_refresh_token\", response.refreshToken);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{driver_refresh_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Secure Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "B. Driver Management & Delivery",
+          "item": [
+            {
+              "name": "1. Toggle Online Availability",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isAvailable\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/availability",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "availability"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Accept Assigned Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/orders/{{order_id}}/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "orders",
+                    "{{order_id}}",
+                    "accept"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Decline Assigned Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/orders/{{order_id}}/decline",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "orders",
+                    "{{order_id}}",
+                    "decline"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Update Order Status (PICKED_UP)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"PICKED_UP\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "5. Update Order Status (DELIVERED)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DELIVERED\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "C. GPS & Telemetry",
+          "item": [
+            {
+              "name": "1. Send Driver Coordinates",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"latitude\": 37.774929,\n  \"longitude\": -122.419416\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/location",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "location"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "D. Order Listings",
+          "item": [
+            {
+              "name": "1. Get Driver Assigned Order History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/history",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "history"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Get Order Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driver_jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{order_id}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
