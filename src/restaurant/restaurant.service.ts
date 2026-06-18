@@ -11,12 +11,14 @@ import * as schema from '@/database/schema';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { eq } from 'drizzle-orm';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { RedisService } from '@/redis/redis.service';
 
 @Injectable()
 export class RestaurantService {
   constructor(
     @Inject(DRIZZLE)
     protected readonly db: NodePgDatabase<typeof schema>,
+    protected readonly redisService: RedisService,
   ) {}
 
   async createRestaurant(ownerId: string, createDto: CreateRestaurantDto) {
@@ -42,9 +44,19 @@ export class RestaurantService {
   }
 
   async findAllRestaurants() {
-    return this.db.query.restaurants.findMany({
+    const cacheKey = 'restaurants:all';
+    type Restaurant = typeof schema.restaurants.$inferSelect;
+    const cached = await this.redisService.get<Restaurant[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const restaurantsList = await this.db.query.restaurants.findMany({
       where: eq(schema.restaurants.isActive, true),
     });
+
+    await this.redisService.set(cacheKey, restaurantsList, 3600);
+    return restaurantsList;
   }
 
   async findRestaurantById(id: string) {
