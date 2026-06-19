@@ -16,6 +16,8 @@ import { DriverModule } from './driver/driver.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { RedisModule } from './redis/redis.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,6 +25,12 @@ import { RedisModule } from './redis/redis.module';
       envFilePath: '.env',
       validate,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     DatabaseModule,
     UsersModule,
     AuthModule,
@@ -38,6 +46,12 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
