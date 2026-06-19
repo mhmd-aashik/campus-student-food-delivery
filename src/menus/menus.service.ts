@@ -11,13 +11,15 @@ import { RestaurantService } from '@/restaurant/restaurant.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 import { eq } from 'drizzle-orm';
+import { RedisService } from '@/redis/redis.service';
 
 @Injectable()
 export class MenusService {
   constructor(
     @Inject(DRIZZLE)
-    protected db: NodePgDatabase<typeof schema>,
-    protected restaurantService: RestaurantService,
+    protected readonly db: NodePgDatabase<typeof schema>,
+    protected readonly restaurantService: RestaurantService,
+    protected readonly redisService: RedisService,
   ) {}
 
   async createMenuItem(ownerId: string, createDto: CreateMenuItemDto) {
@@ -98,8 +100,19 @@ export class MenusService {
   async findByRestaurantId(restaurantId: string) {
     await this.restaurantService.findRestaurantById(restaurantId);
 
-    return this.db.query.menus.findMany({
+    const cacheKey = `restaurant:${restaurantId}:menus`;
+    type MenuItem = typeof schema.menus.$inferSelect;
+    const cached = await this.redisService.get<MenuItem[]>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const menuItem = await this.db.query.menus.findMany({
       where: eq(schema.menus.restaurantId, restaurantId),
     });
+
+    await this.redisService.set(cacheKey, menuItem, 3600);
+    return menuItem;
   }
 }
